@@ -47,8 +47,22 @@ namespace PreAceleracionOctubre.Controllers
             if (!personajes.Any())
                 return NoContent();
 
-            return Ok(personajes);
+            var listado = personajes.Select(x => new { x.Imagen, x.Nombre }).ToList();
 
+            return Ok(listado);
+        }
+
+        [HttpGet]
+        [Route("character")]
+        [AllowAnonymous]
+        public IActionResult Get(int id)
+        {
+            var personaje = _personajeRepository.GetPersonaje(id);
+
+            if (personaje == null)
+                return NotFound($"el personaje con id {id} no existe.");
+
+            return Ok(personaje);
         }
 
         [HttpPost]

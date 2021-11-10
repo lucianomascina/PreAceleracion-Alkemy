@@ -62,8 +62,23 @@ namespace PreAceleracionOctubre.Controllers
             {
                 return NoContent();
             }
-            return Ok(peliculas);
+            
+            var listado = peliculas.Select(x => new { x.Imagen, x.Titulo, x.FechaCreacion }).ToList();
 
+            return Ok(listado);
+        }
+
+        [HttpGet]
+        [Route("movie")]
+        [AllowAnonymous]
+        public IActionResult Get(int id)
+        {
+            var pelicula = _peliculaRepository.GetPelicula(id);
+
+            if (pelicula == null)
+                return NotFound($"la pelicula con id {id} no existe.");
+
+            return Ok(pelicula);
         }
 
         [HttpPost]

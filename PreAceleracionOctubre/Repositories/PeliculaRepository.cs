@@ -18,7 +18,7 @@ namespace PreAceleracionOctubre.Repositories
         }
         public Pelicula GetPelicula(int id)
         {
-            return DbSet.Include(x => x.Personajes).FirstOrDefault(x => x.Id == id);
+            return DbSet.Include(x => x.Personajes).Include(y => y.genero).FirstOrDefault(x => x.Id == id);
         }
         public List<Pelicula> GetPeliculas()
         {
