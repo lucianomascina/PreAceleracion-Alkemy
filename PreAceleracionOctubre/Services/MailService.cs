@@ -19,17 +19,23 @@ namespace PreAceleracionOctubre.Services
         }
         public async Task SendEmail(User user)
         {
-            var msg = new SendGridMessage()
+            try
             {
-                From = new EmailAddress("lucianomascina@gmail.com", "API de Disney"),
-                Subject = "se ha registrado satisfactoriamente!",
-                PlainTextContent = $"se ha creado el usuario con nombre {user.UserName} de manera correcta."
-            };
+                var msg = new SendGridMessage()
+                {
+                    From = new EmailAddress("lucianomascina@gmail.com", "API de Disney"),
+                    Subject = "se ha registrado satisfactoriamente!",
+                    PlainTextContent = $"se ha creado el usuario con nombre {user.UserName} de manera correcta."
+                };
 
-            msg.AddTo(new EmailAddress(user.Email, "test User"));
+                msg.AddTo(new EmailAddress(user.Email, "test User"));
 
-            await _sendGridClient.SendEmailAsync(msg);
+                await _sendGridClient.SendEmailAsync(msg);
+            }
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
         }
-
     }
 }

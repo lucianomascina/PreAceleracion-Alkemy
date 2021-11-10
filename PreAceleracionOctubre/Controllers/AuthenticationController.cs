@@ -39,32 +39,38 @@ namespace PreAceleracionOctubre.Controllers
         [Route("registro")]
         public async Task<IActionResult> Register(RegisterRequestModel model)
         {
-            var userExists = await _userManager.FindByNameAsync(model.Username);
-
-            if (userExists != null)
-                return StatusCode(StatusCodes.Status400BadRequest);
-
-            var user = new User
+            try
             {
-                UserName = model.Username,
-                Email = model.Email,
-                IsActive = true
-            };
+                var userExists = await _userManager.FindByNameAsync(model.Username);
 
-            var result = await _userManager.CreateAsync(user, model.Password);
+                if (userExists != null)
+                    return StatusCode(StatusCodes.Status400BadRequest);
 
-            if(!result.Succeeded)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new
-                    {
-                        Status = "Error",
-                        Message = $"User creation failed! Errors: {string.Join(",",result.Errors.Select(x => x.Description))}"
-                    });
+                var user = new User
+                {
+                    UserName = model.Username,
+                    Email = model.Email,
+                    IsActive = true
+                };
+
+                var result = await _userManager.CreateAsync(user, model.Password);
+
+                if (!result.Succeeded)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        new
+                        {
+                            Status = "Error",
+                            Message = $"User creation failed! Errors: {string.Join(",", result.Errors.Select(x => x.Description))}"
+                        });
+                }
+
+                await _mailService.SendEmail(user);
             }
-
-            await _mailService.SendEmail(user);
-
+            catch(Exception ex)
+            {
+                Console.WriteLine(ex.Message);
+            }
             return Ok(new
             {
                 Status = "Success",
@@ -76,45 +82,51 @@ namespace PreAceleracionOctubre.Controllers
         [Route("registro-admin")]
         public async Task<IActionResult> RegistroAdmin(RegisterRequestModel model)
         {
-            var userExists = await _userManager.FindByNameAsync(model.Username);
-
-            if (userExists != null)
+            try
             {
-                return StatusCode(StatusCodes.Status400BadRequest,
-                    new 
-                    {
-                        Status = "error",
-                        Message = $"User creation failed! The user with username {model.Username} already exists."
-                    });
+                var userExists = await _userManager.FindByNameAsync(model.Username);
+
+                if (userExists != null)
+                {
+                    return StatusCode(StatusCodes.Status400BadRequest,
+                        new
+                        {
+                            Status = "error",
+                            Message = $"User creation failed! The user with username {model.Username} already exists."
+                        });
+                }
+
+                var user = new User
+                {
+                    UserName = model.Username,
+                    IsActive = true
+                };
+
+                var result = await _userManager.CreateAsync(user, model.Password);
+
+                if (!result.Succeeded)
+                {
+                    return StatusCode(StatusCodes.Status500InternalServerError,
+                        new
+                        {
+                            Status = "Error",
+                            Message = $"User creation failed! Errors: {string.Join(",", result.Errors.Select(x => x.Description))}"
+                        });
+                }
+
+                if (!await _roleManager.RoleExistsAsync("User"))
+                    await _roleManager.CreateAsync(new IdentityRole("User"));
+
+                if (!await _roleManager.RoleExistsAsync("Admin"))
+                    await _roleManager.CreateAsync(new IdentityRole("Admin"));
+
+                await _userManager.AddToRoleAsync(user, "Admin");
+                await _mailService.SendEmail(user);
             }
-
-            var user = new User
+            catch(Exception ex)
             {
-                UserName = model.Username,
-                IsActive = true
-            };
-
-            var result = await _userManager.CreateAsync(user, model.Password);
-
-            if (!result.Succeeded)
-            {
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new
-                    {
-                        Status = "Error",
-                        Message = $"User creation failed! Errors: {string.Join(",", result.Errors.Select(x => x.Description))}"
-                    });
+                Console.WriteLine(ex.Message);
             }
-
-            if (!await _roleManager.RoleExistsAsync("User"))
-                await _roleManager.CreateAsync(new IdentityRole("User"));
-
-            if (!await _roleManager.RoleExistsAsync("Admin"))
-                await _roleManager.CreateAsync(new IdentityRole("Admin"));
-
-            await _userManager.AddToRoleAsync(user, "Admin");
-            await _mailService.SendEmail(user);
-
             return Ok(new
             {
                 Status = "Success",
