@@ -1,3 +1,4 @@
-# PreAceleracion-LucianoMascina
-Web Api .Net Core
--Entity framework code first
+# PreAceleracion-Alkemy
+Api Rest
+Entity framework code first
+
